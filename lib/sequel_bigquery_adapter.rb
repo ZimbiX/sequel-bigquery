@@ -23,7 +23,8 @@ module Sequel
 
         config = @orig_opts.dup
         config.delete(:adapter)
-        bq_dataset_name = config.delete(:dataset)
+        config.delete(:logger)
+        bq_dataset_name = config.delete(:dataset) || config.delete(:database)
         # require 'pry'; binding.pry
         @bigquery = Google::Cloud::Bigquery.new(config)
         # require 'pry'; binding.pry
@@ -31,10 +32,15 @@ module Sequel
       end
 
       def disconnect_connection(c)
-        c.disconnect
+        # c.disconnect
       end
 
       def execute(sql, opts=OPTS)
+        @loggers[0]&.debug('            ' + sql)
+        sql = sql.gsub(/\sdefault \S+/i) do
+          puts "Warning: Default removed from below query as it's not supported on BigQuery:\n%s" % sql
+        end
+
         synchronize(opts[:server]) do |conn|
           begin
             r = log_connection_yield(sql, conn){conn.query(sql)}
@@ -45,6 +51,8 @@ module Sequel
             end
           # TODO
           # rescue ::ODBC::Error, ArgumentError => e
+          rescue Google::Cloud::InvalidArgumentError => e
+            puts e
           rescue ArgumentError => e
             raise_error(e)
           end
