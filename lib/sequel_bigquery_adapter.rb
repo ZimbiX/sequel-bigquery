@@ -14,6 +14,7 @@ module Sequel
 
       def initialize(*args, **kawrgs)
         @orig_opts = kawrgs.fetch(:orig_opts)
+        @sql_buffer = []
         super
       end
 
@@ -37,6 +38,13 @@ module Sequel
 
       def execute(sql, opts=OPTS)
         @loggers[0]&.debug('            ' + sql)
+
+        if sql =~ /^begin/i
+          @loggers[0].warning('Transaction detected. This only supported on BigQuery in a script or session. Commencing buffering to run the whole transaction at once as a script upon commit. Note that no result data is returned while the transaction is open.')
+          @sql_buffer << sql
+          return []
+        end
+
         sql = sql.gsub(/\sdefault \S+/i) do
           puts "Warning: Default removed from below query as it's not supported on BigQuery:\n%s" % sql
         end
@@ -57,6 +65,11 @@ module Sequel
             raise_error(e)
           end
         end
+          .tap { @sql_buffer = [] }
+      end
+
+      def supports_create_table_if_not_exists?
+        true
       end
       
       # def execute_dui(sql, opts=OPTS)
