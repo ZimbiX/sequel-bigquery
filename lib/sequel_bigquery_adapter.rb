@@ -1,7 +1,9 @@
 # frozen-string-literal: true
 
+require 'delegate'
+
 require 'google/cloud/bigquery'
-# require 'sequel/postgres'
+require 'paint'
 
 module Sequel
   module Bigquery
@@ -13,12 +15,15 @@ module Sequel
       set_adapter_scheme :bigquery
 
       def initialize(*args, **kawrgs)
+        puts '.new'
         @orig_opts = kawrgs.fetch(:orig_opts)
         @sql_buffer = []
+        @sql_buffering = false
         super
       end
 
       def connect(*_args)
+        puts '#connect'
         # self.input_identifier_meth = nil
         # self.identifier_output_method = nil
 
@@ -26,52 +31,88 @@ module Sequel
         config.delete(:adapter)
         config.delete(:logger)
         bq_dataset_name = config.delete(:dataset) || config.delete(:database)
-        # require 'pry'; binding.pry
         @bigquery = Google::Cloud::Bigquery.new(config)
-        # require 'pry'; binding.pry
-        @bigquery.dataset(bq_dataset_name)
+        ObjectSpace.each_object(HTTPClient).each { |c| c.debug_dev = STDOUT }
+        @bigquery.dataset(bq_dataset_name) || begin
+          @loggers[0].debug('BigQuery dataset %s does not exist; creating it' % bq_dataset_name)
+          @bigquery.create_dataset(bq_dataset_name)
+        end
+          .tap { puts '#connect end' }
       end
 
       def disconnect_connection(c)
+        puts '#disconnect_connection'
         # c.disconnect
       end
 
       def execute(sql, opts=OPTS)
-        @loggers[0]&.debug('            ' + sql)
+        puts '#execute'
+        log_query(sql)
 
-        if sql =~ /^begin/i
-          @loggers[0].warning('Transaction detected. This only supported on BigQuery in a script or session. Commencing buffering to run the whole transaction at once as a script upon commit. Note that no result data is returned while the transaction is open.')
-          @sql_buffer << sql
-          return []
-        end
+        require 'pry'; binding.pry if sql =~ /CREATE TABLE IF NOT EXISTS/i
 
         sql = sql.gsub(/\sdefault \S+/i) do
-          puts "Warning: Default removed from below query as it's not supported on BigQuery:\n%s" % sql
+          warn_default_removal(sql)
+          ''
+        end
+
+        if sql =~ /^update/i && sql !~ / where /i
+          warn("Warning: Appended 'where 1 = 1' to query since BigQuery requires UPDATE statements to include a WHERE clause")
+          sql = sql + ' where 1 = 1'
+        end
+
+        if sql =~ /^begin/i
+          warn_transaction
+          @sql_buffering = true
+        end
+
+        if @sql_buffering
+          @sql_buffer << sql
+          if sql =~ /^commit/i
+            warn("Warning: Will now execute entire buffered transaction:\n" + @sql_buffer.join("\n"))
+          else
+            return []
+          end
         end
 
         synchronize(opts[:server]) do |conn|
           begin
-            r = log_connection_yield(sql, conn){conn.query(sql)}
+            results = log_connection_yield(sql, conn) do
+              sql_to_execute = @sql_buffer.any? ? @sql_buffer.join("\n") : sql
+              conn.query(sql_to_execute)
+              # raw_result = conn.query(sql_to_execute)
+              # BQResult.new(raw_result)
+            end
+            require 'amazing_print'
+            ap results
             if block_given?
-              yield(r)
+              yield results
             else
-              r
+              results
             end
           # TODO
           # rescue ::ODBC::Error, ArgumentError => e
-          rescue Google::Cloud::InvalidArgumentError => e
-            puts e
-          rescue ArgumentError => e
+          rescue Google::Cloud::InvalidArgumentError, ArgumentError => e
             raise_error(e)
           end
         end
-          .tap { @sql_buffer = [] }
+          .tap do
+            @sql_buffer = []
+            @sql_buffering = false
+          end
       end
 
       def supports_create_table_if_not_exists?
         true
       end
+
+      # def supports_transactional_ddl?
+      #   false
+      # end
       
+      # def execute_dui(sql, opts=OPTS)
+      # end
+
       # def execute_dui(sql, opts=OPTS)
       #   # require 'pry'; binding.pry
       #   synchronize(opts[:server]) do |conn|
@@ -88,6 +129,7 @@ module Sequel
       private
       
       def adapter_initialize
+        puts '#adapter_initialize'
         self.extension(:identifier_mangling)
         self.identifier_input_method = nil
         self.quote_identifiers = false
@@ -107,6 +149,7 @@ module Sequel
       end
 
       def schema_parse_table(table_name, opts)
+        logger.debug(Paint['schema_parse_table', :red, :bold])
         # require 'pry'; binding.pry
         @bigquery.datasets.map do |dataset|
           [
@@ -120,10 +163,34 @@ module Sequel
         # super || (e.is_a?(::ODBC::Error) && /\A08S01/.match(e.message))
         super
       end
+
+      # Padded to horizontally align with post-execution log message which includes the execution time
+      def log_query(sql)
+        pad = '                                                                '
+        puts Paint[pad + sql, :cyan, :bold]
+        # @loggers[0]&.debug('            ' + sql)
+      end
+
+      def warn(msg)
+        @loggers[0].warn(Paint[msg, '#FFA500', :bold])
+      end
+
+      def warn_default_removal(sql)
+        warn("Warning: Default removed from below query as it's not supported on BigQuery:\n%s" % sql)
+      end
+
+      def warn_transaction
+        warn('Warning: Transaction detected. This only supported on BigQuery in a script or session. Commencing buffering to run the whole transaction at once as a script upon commit. Note that no result data is returned while the transaction is open.')
+      end
     end
+
+    # class BQResult < SimpleDelegator
+
+    # end
     
     class Dataset < Sequel::Dataset
       def fetch_rows(sql)
+        puts '#fetch_rows'
         # execute(sql) do |s|
         #   i = -1
         #   cols = s.columns(true).map{|c| [output_identifier(c.name), c.type, i+=1]}
@@ -137,11 +204,22 @@ module Sequel
         # end
         # self
 
-        execute(sql).each do |row|
-          yield row
+        execute(sql) do |bq_result|
+          self.columns = bq_result.fields.map { |field| field.name.to_sym }
+          bq_result.each do |row|
+            yield row
+          end
         end
+
+        # execute(sql).each do |row|
+        #   yield row
+        # end
         self
       end
+
+      # def columns
+      #   fields.map { |field| field.name.to_sym }
+      # end
       
       private
 
