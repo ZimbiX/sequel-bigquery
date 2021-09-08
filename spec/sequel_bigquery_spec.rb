@@ -50,16 +50,21 @@ RSpec.describe Sequel::Bigquery do
   context 'reading/writing rows' do
     let(:person) do
       {
-        name: 'Brendan',
+        name: 'Reginald',
         age: 27,
         is_developer: true,
+        last_skied_at: last_skied_at,
       }
     end
+    let(:last_skied_at) { Time.new(2016, 8, 21, 16, 0, 0, '+08:00') }
 
     it 'can read back an inserted row' do
+      db[:people].truncate
       db[:people].insert(person)
-      result = db[:people].where(name: 'Brendan').all
-      expect(result).to eq([person])
+      result = db[:people].where(name: 'Reginald').all
+      expect(result).to eq([
+        person.merge(last_skied_at: last_skied_at.getlocal)
+      ])
     end
   end
 end

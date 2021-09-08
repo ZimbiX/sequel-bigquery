@@ -1,6 +1,7 @@
 # frozen-string-literal: true
 
 require 'delegate'
+require 'time'
 
 require 'google/cloud/bigquery'
 require 'paint'
@@ -255,8 +256,8 @@ module Sequel
       #   end
       # end
 
-      def default_timestamp_format
-        "{ts '%Y-%m-%d %H:%M:%S'}"
+      def literal_time(v)
+        "'#{v.iso8601}'"
       end
 
       def literal_date(v)
