@@ -24,11 +24,13 @@ RSpec.describe Sequel::Bigquery do
     before { delete_schema_info_table }
 
     def delete_schema_info_table
-      schema_info_table&.delete
+      %w[schema_info people].each do |table_name|
+        table(table_name)&.delete
+      end
     end
 
-    def schema_info_table
-      dataset.table('schema_info')
+    def table(name)
+      dataset.table(name)
     end
 
     let(:bigquery) { Google::Cloud::Bigquery.new(project: project_name) }
@@ -37,9 +39,11 @@ RSpec.describe Sequel::Bigquery do
     let(:migrations_dir) { 'spec/support/migrations' }
 
     it 'can migrate' do
-      expect(schema_info_table).to be_nil
+      expect(table('schema_info')).to be_nil
+      expect(table('people')).to be_nil
       Sequel::Migrator.run(db, migrations_dir)
-      expect(schema_info_table).not_to be_nil
+      expect(table('schema_info')).not_to be_nil
+      expect(table('people')).not_to be_nil
     end
   end
 end
