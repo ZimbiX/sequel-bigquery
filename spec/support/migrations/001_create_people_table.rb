@@ -8,6 +8,7 @@ Sequel.migration do
       TrueClass :is_developer, null: false
       DateTime :last_skied_at
       Date :date_of_birth, null: false
+      BigDecimal :height_m
     end
   end
 end
