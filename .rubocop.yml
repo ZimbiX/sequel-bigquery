@@ -68,6 +68,9 @@ Naming/MethodParameterName:
     - 'by'
     - 'as'
     - 'to'
+Naming/FileName:
+  Exclude:
+    - lib/sequel-bigquery.rb
 Naming/VariableNumber:
   Enabled: false
 Performance/AncestorsInclude:

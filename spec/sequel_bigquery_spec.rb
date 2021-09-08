@@ -4,7 +4,7 @@ require 'spec_helper'
 
 Sequel.extension :migration
 
-RSpec.describe Sequel::Bigquery do
+RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   let(:db) do
     Sequel.connect(
       adapter: :bigquery,
@@ -20,7 +20,7 @@ RSpec.describe Sequel::Bigquery do
     expect(db).to be_a(Sequel::Bigquery::Database)
   end
 
-  context 'migrating' do
+  describe 'migrating' do
     before { delete_schema_info_table }
 
     def delete_schema_info_table
@@ -47,7 +47,7 @@ RSpec.describe Sequel::Bigquery do
     end
   end
 
-  context 'reading/writing rows' do
+  describe 'reading/writing rows' do
     let(:person) do
       {
         name: 'Reginald',
@@ -60,12 +60,12 @@ RSpec.describe Sequel::Bigquery do
     end
     let(:last_skied_at) { Time.new(2016, 8, 21, 16, 0, 0, '+08:00') }
 
-    it 'can read back an inserted row' do
+    it 'can read back an inserted row' do # rubocop:disable RSpec/ExampleLength
       db[:people].truncate
       db[:people].insert(person)
       result = db[:people].where(name: 'Reginald').all
       expect(result).to eq([
-        person.merge(last_skied_at: last_skied_at.getlocal)
+        person.merge(last_skied_at: last_skied_at.getlocal),
       ])
     end
   end
