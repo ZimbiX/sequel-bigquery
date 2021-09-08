@@ -13,6 +13,9 @@ services:
       - .:/work
       - ruby-2.7.2-gem-cache:/usr/local/bundle
       - ~/.docker-rc.d/:/.docker-rc.d/:ro
+      - "${GOOGLE_APPLICATION_CREDENTIALS-~/.config/gcloud/application_default_credentials.json}:/secrets/gcloud/credentials.json:ro"
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcloud/credentials.json
 
 volumes:
   ruby-2.7.2-gem-cache: ~
