@@ -54,6 +54,7 @@ RSpec.describe Sequel::Bigquery do
         age: 27,
         is_developer: true,
         last_skied_at: last_skied_at,
+        date_of_birth: Date.new(1994, 1, 31),
       }
     end
     let(:last_skied_at) { Time.new(2016, 8, 21, 16, 0, 0, '+08:00') }

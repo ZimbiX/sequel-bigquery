@@ -260,9 +260,9 @@ module Sequel
         "'#{v.iso8601}'"
       end
 
-      def literal_date(v)
-        v.strftime("{d '%Y-%m-%d'}")
-      end
+      # def literal_date(v)
+      #   v.strftime("{d '%Y-%m-%d'}")
+      # end
       
       def literal_false
         'false'

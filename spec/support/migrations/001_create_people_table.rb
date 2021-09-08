@@ -7,6 +7,7 @@ Sequel.migration do
       Integer :age, null: false
       TrueClass :is_developer, null: false
       DateTime :last_skied_at
+      Date :date_of_birth, null: false
     end
   end
 end
