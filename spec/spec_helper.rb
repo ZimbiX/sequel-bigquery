@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+ENV['GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS'] = 'true'
+
 require 'sequel-bigquery'
 
 RSpec.configure do |config|

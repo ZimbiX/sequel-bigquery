@@ -4,6 +4,7 @@ require 'delegate'
 
 require 'google/cloud/bigquery'
 require 'paint'
+require 'sequel'
 
 module Sequel
   module Bigquery
