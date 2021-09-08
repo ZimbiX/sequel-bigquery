@@ -14,9 +14,6 @@ on-exit() {
 }
 trap on-exit EXIT
 
-info 'Updating help output in readme'
-auto/dev bundle exec rake update_readme_help
-
 info 'Checking for uncommitted changes...'
 [[ -z $(git status -s) ]] || err 'ERROR: You have uncommited changes'
 
