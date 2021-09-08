@@ -1,0 +1,7 @@
+steps:
+
+  - label: Style
+    command: auto/check-style
+
+  - label: Test
+    command: auto/test

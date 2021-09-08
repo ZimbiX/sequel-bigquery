@@ -1,6 +1,6 @@
 # sequel-bigquery
 
-[![CI status](https://github.com/ZimbiX/sequel-bigquery/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/ZimbiX/sequel-bigquery/actions/workflows/main.yml) [![Gem Version](https://badge.fury.io/rb/sequel-bigquery.svg)](https://rubygems.org/gems/sequel-bigquery)
+[![Gem Version](https://badge.fury.io/rb/sequel-bigquery.svg)](https://rubygems.org/gems/sequel-bigquery)
 
 A Sequel adapter for [Google's BigQuery](https://cloud.google.com/bigquery).
 
