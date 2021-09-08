@@ -46,4 +46,20 @@ RSpec.describe Sequel::Bigquery do
       expect(table('people')).not_to be_nil
     end
   end
+
+  context 'reading/writing rows' do
+    let(:person) do
+      {
+        name: 'Brendan',
+        age: 27,
+        is_developer: true,
+      }
+    end
+
+    it 'can read back an inserted row' do
+      db[:people].insert(person)
+      result = db[:people].where(name: 'Brendan').all
+      expect(result).to eq([person])
+    end
+  end
 end

@@ -264,11 +264,11 @@ module Sequel
       end
       
       def literal_false
-        '0'
+        'false'
       end
       
       def literal_true
-        '1'
+        'true'
       end
     end
   end
