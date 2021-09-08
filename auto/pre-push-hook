@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+cd "$(dirname "$0")/.."
+
+. scripts/script-functions
+. auto/release/.env
+
+info 'Running pre-push hook...'
+
+on-exit() {
+  [[ -n "${succeeded-}" ]] || notify-err "$GEM_NAME" "Pre-push checks failed" "$GEM_NAME"-pre-push-hook-failed
+}
+trap on-exit EXIT
+
+info 'Updating help output in readme'
+auto/dev bundle exec rake update_readme_help
+
+info 'Checking for uncommitted changes...'
+[[ -z $(git status -s) ]] || err 'ERROR: You have uncommited changes'
+
+info 'Checking bundle...'
+bundle check || bundle install
+
+info 'RuboCop...'
+auto/check-style
+
+info 'RSpec...'
+auto/test
+
+succeeded=true
+success 'All pre-push checks passed! =)'

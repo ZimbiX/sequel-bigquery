@@ -1,0 +1,165 @@
+require:
+  - rubocop-performance
+  - rubocop-rspec
+# inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 2.6
+  CacheRootDirectory: .cache
+  NewCops: enable
+Layout/ArgumentAlignment:
+  Enabled: false
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+Metrics/BlockLength:
+  Exclude:
+    - 'scripts/**/*'
+    - 'spec/**/*'
+Layout/LineLength:
+  Enabled: true
+  Max: 140
+  IgnoredPatterns:
+    # Ignore line length of comment-only lines:
+    - '(\A\s*)#'
+Layout/SpaceBeforeBrackets:
+  Enabled: true
+Lint/AmbiguousAssignment:
+  Enabled: true
+Lint/DeprecatedConstants:
+  Enabled: true
+Lint/DuplicateBranch:
+  Enabled: true
+Lint/DuplicateRegexpCharacterClassElement:
+  Enabled: true
+Lint/EmptyBlock:
+  Enabled: true
+Lint/EmptyClass:
+  Enabled: true
+Lint/LambdaWithoutLiteralBlock:
+  Enabled: true
+Lint/NoReturnInBeginEndBlocks:
+  Enabled: true
+Lint/NumberedParameterAssignment:
+  Enabled: true
+Lint/OrAssignmentToConstant:
+  Enabled: true
+Lint/RedundantDirGlobSort:
+  Enabled: true
+Lint/SymbolConversion:
+  Enabled: true
+Lint/ToEnumArguments:
+  Enabled: true
+Lint/TripleQuotes:
+  Enabled: true
+Lint/UnexpectedBlockArity:
+  Enabled: true
+Lint/UnmodifiedReduceAccumulator:
+  Enabled: true
+Metrics/MethodLength:
+  Max: 15
+Naming/MethodParameterName:
+  AllowedNames:
+    - 'db'
+    - 'id'
+    - 'by'
+    - 'as'
+    - 'to'
+Naming/VariableNumber:
+  Enabled: false
+Performance/AncestorsInclude:
+  Enabled: true
+Performance/BigDecimalWithNumericArgument:
+  Enabled: true
+Performance/BlockGivenWithExplicitBlock:
+  Enabled: true
+Performance/CollectionLiteralInLoop:
+  Enabled: true
+  Exclude:
+    - spec/**/*
+Performance/ConstantRegexp:
+  Enabled: true
+  Exclude:
+    - spec/**/*
+Performance/MethodObjectAsBlock:
+  Enabled: false
+Performance/RedundantSortBlock:
+  Enabled: true
+Performance/RedundantStringChars:
+  Enabled: true
+Performance/ReverseFirst:
+  Enabled: true
+Performance/SortReverse:
+  Enabled: true
+Performance/Squeeze:
+  Enabled: true
+Performance/StringInclude:
+  Enabled: true
+Performance/Sum:
+  Enabled: true
+RSpec/DescribedClass:
+  Enabled: false
+RSpec/ExpectChange:
+  EnforcedStyle: block
+RSpec/FilePath:
+  CustomTransform:
+    GreenSync: greensync
+RSpec/ImplicitSubject:
+  Enabled: false
+RSpec/LeakyConstantDeclaration:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Max: 4
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+RSpec/NestedGroups:
+  Max: 7
+Style/ArgumentsForwarding:
+  Enabled: true
+Style/CollectionCompact:
+  Enabled: true
+Style/CommentAnnotation:
+  Enabled: false
+Style/Documentation:
+  Enabled: false
+Style/DocumentDynamicEvalDefinition:
+  Enabled: true
+Style/DoubleNegation:
+  Enabled: false
+Style/EndlessMethod:
+  Enabled: true
+Style/GlobalStdStream:
+  Enabled: false
+Style/HashExcept:
+  Enabled: true
+Style/IfWithBooleanLiteralBranches:
+  Enabled: true
+Style/StringConcatenation:
+  Enabled: false
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: comma
+Style/FormatString:
+  EnforcedStyle: percent
+Style/FormatStringToken:
+  Enabled: false
+Style/NegatedIfElseCondition:
+  Enabled: true
+Style/NilLambda:
+  Enabled: true
+Style/NumericPredicate:
+  Enabled: false
+Style/KeywordParametersOrder:
+  Enabled: false
+Style/RedundantArgument:
+  Enabled: true
+Style/SwapValues:
+  Enabled: true
+Style/PerlBackrefs:
+  Enabled: false

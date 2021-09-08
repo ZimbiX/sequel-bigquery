@@ -1,0 +1,14 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+cd $(dirname $0)/..
+
+set -x
+
+docker run --rm -it \
+  -e GITHUB_ACCESS_TOKEN \
+  --mount "type=bind,src=$PWD,dst=/work" \
+  -w /work \
+  -v ~/.docker-rc.d/:/.docker-rc.d/:ro \
+  asia.gcr.io/greensync-container-registry/deploytools:1.0.3 \
+  "${@-bash}"

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+cd "$(dirname "$0")/../.."
+
+source scripts/script-functions
+source "$(dirname "$0")/.env"
+
+./auto/with-deploytools update-gem-version-file "$VERSION_FILE" "${1:-}"
+new_version=$(grep -oE "[0-9][^'\"]*" "$VERSION_FILE")
+
+{ info "Running 'bundle install' to update 'Gemfile.lock'..."; } 2>/dev/null
+./auto/dev bundle install
+
+{ info "Showing Git diff..."; } 2>/dev/null
+git add "$VERSION_FILE" Gemfile.lock
+git diff --staged
+
+{ info "Committing..."; } 2>/dev/null
+git commit -m "Update gem version to $new_version for new release"

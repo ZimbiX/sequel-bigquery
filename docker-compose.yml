@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+
+  dev:
+    build:
+      context: .
+      target: dev-environment
+    working_dir: /work
+    entrypoint: scripts/entrypoint
+    command: bash
+    volumes:
+      - .:/work
+      - ruby-2.7.2-gem-cache:/usr/local/bundle
+      - ~/.docker-rc.d/:/.docker-rc.d/:ro
+
+volumes:
+  ruby-2.7.2-gem-cache: ~

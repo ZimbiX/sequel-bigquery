@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+green='\e[32m'; blue='\e[36m'; red='\e[31m'; bold='\e[1m'; reset='\e[0m'
+coloured-arrow() { printf "$bold$1==> $2$reset\n"; }
+success() { coloured-arrow "$green" "$1"; }
+info() { coloured-arrow "$blue" "$1"; }
+err() { coloured-arrow "$red" "$1"; exit 1; }
+
+# Log an error, also producing a notification on Gnome
+notify-err() {
+  local title="$1"
+  local message="$2"
+  local notification_file="/tmp/$3"
+  try-notify-send --icon=error --urgency=low --replace-file="$notification_file" "$title" "$message"
+  err "$title - $message"
+}
+
+# Dismiss a Gnome notification
+notify-clear() {
+  local notification_file="/tmp/$1"
+  if [ -f "$notification_file" ]; then
+    try-notify-send --close="$(cat "$notification_file")"
+  fi
+}
+
+# Use the Gnome notification utility if it exists
+# https://github.com/vlevit/notify-send.sh
+try-notify-send() {
+  if [ -x "$(command -v notify-send.sh)" ]; then
+    command notify-send.sh "$@"
+  fi
+}

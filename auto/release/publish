@@ -1,0 +1,36 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+cd "$(dirname "$0")/../.."
+
+source scripts/script-functions
+source "$(dirname "$0")/.env"
+
+if [ -z "${GITHUB_ACCESS_TOKEN-}" ]; then
+  err "missing GITHUB_ACCESS_TOKEN in the environment"
+fi
+
+# Cross-platform open
+open() {
+  if command -v open &>/dev/null; then
+    command open "$@"
+  else
+    xdg-open "$@"
+  fi
+}
+
+version=$(grep -oE "[0-9][^'\"]*" "$VERSION_FILE")
+
+info "Building the gem..."
+gem build "$GEM_NAME"
+
+info "Pushing $GEM_NAME-$version.gem to RubyGems..."
+gem push "$GEM_NAME-$version.gem"
+
+info "Creating a draft GitHub release..."
+auto/with-deploytools create-github-release -d -v "${version}" \
+  | tee >(jq -r '.html_url' > /tmp/release_html_url)
+
+info "Opening GitHub page in browser so you can create a release from the tag"
+info "Be sure to include a quick summary of what's changed since the last release..."
+open "$(cat /tmp/release_html_url)"

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+if [ -f /.docker-rc.d/.docker-bashrc ]; then
+  echo "source /.docker-rc.d/.docker-bashrc" >> ~/.bashrc
+else
+  echo ".docker-bashrc not found - see https://handbook.greensync.org/product/development/docker-compose/#injecting-your-own-dotfiles" >&2
+fi
+
+# Ensure that we have the correct version of bundler installed.
+# We need to do this here because the shared volume we use for gems with
+# docker-compose may have a version that does not match the one we install in
+# the base Docker image.
+if [ -n "${RUBY_BUNDLER_VERSION-}" ]; then
+  actualBundlerVersion=$(bundle -v | cut -d ' ' -f 3)
+  if [[ "${actualBundlerVersion}" != "${RUBY_BUNDLER_VERSION}" ]]; then
+    gem install "bundler:${RUBY_BUNDLER_VERSION}"
+  fi
+fi
+
+bundle check || bundle install --jobs=100
+exec "${@-bash}"

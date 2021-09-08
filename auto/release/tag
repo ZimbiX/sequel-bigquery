@@ -1,0 +1,20 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+cd "$(dirname "$0")/../.."
+
+source scripts/script-functions
+source "$(dirname "$0")/.env"
+
+# Uncomment if/when we hav a pre-push hook
+# info "Setting up Git pre-push hook..."
+# ln -sf $(dirname $0)/../pre-push-hook .git/hooks/pre-push
+
+version=$(grep -oE "[0-9][^'\"]*" "$VERSION_FILE")
+
+info "Pushing Git commits to GitHub..."
+git push origin master
+
+info "Tagging release..."
+git tag "$version"
+git push origin "$version"

@@ -1,0 +1,40 @@
+name: CI
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+jobs:
+
+  check-style:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Pull Docker images
+        run: docker-compose pull
+
+      - name: Docker layer caching
+        uses: ZimbiX/action-docker-layer-caching@support-images-identified-by-sha
+        continue-on-error: true
+
+      - name: RuboCop
+        run: auto/check-style
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Pull Docker images
+        run: docker-compose pull
+
+      - name: Docker layer caching
+        uses: ZimbiX/action-docker-layer-caching@support-images-identified-by-sha
+        continue-on-error: true
+
+      - name: RSpec
+        run: auto/test
