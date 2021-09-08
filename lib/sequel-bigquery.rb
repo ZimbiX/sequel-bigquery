@@ -26,9 +26,6 @@ module Sequel
 
       def connect(*_args)
         puts '#connect'
-        # self.input_identifier_meth = nil
-        # self.identifier_output_method = nil
-
         config = @orig_opts.dup
         config.delete(:adapter)
         config.delete(:logger)
@@ -82,8 +79,6 @@ module Sequel
             results = log_connection_yield(sql, conn) do
               sql_to_execute = @sql_buffer.any? ? @sql_buffer.join("\n") : sql
               conn.query(sql_to_execute)
-              # raw_result = conn.query(sql_to_execute)
-              # BQResult.new(raw_result)
             end
             require 'amazing_print'
             ap results
@@ -115,26 +110,6 @@ module Sequel
           :string
         end
       end
-
-      # def supports_transactional_ddl?
-      #   false
-      # end
-      
-      # def execute_dui(sql, opts=OPTS)
-      # end
-
-      # def execute_dui(sql, opts=OPTS)
-      #   # require 'pry'; binding.pry
-      #   synchronize(opts[:server]) do |conn|
-      #     begin
-      #       log_connection_yield(sql, conn){conn.do(sql)}
-      #     # TODO:
-      #     # rescue ::ODBC::Error, ArgumentError => e
-      #     rescue ArgumentError => e
-      #       raise_error(e)
-      #     end
-      #   end
-      # end
 
       private
       
@@ -193,26 +168,10 @@ module Sequel
         warn('Warning: Transaction detected. This only supported on BigQuery in a script or session. Commencing buffering to run the whole transaction at once as a script upon commit. Note that no result data is returned while the transaction is open.')
       end
     end
-
-    # class BQResult < SimpleDelegator
-
-    # end
     
     class Dataset < Sequel::Dataset
       def fetch_rows(sql)
         puts '#fetch_rows'
-        # execute(sql) do |s|
-        #   i = -1
-        #   cols = s.columns(true).map{|c| [output_identifier(c.name), c.type, i+=1]}
-        #   columns = cols.map{|c| c[0]}
-        #   self.columns = columns
-        #   s.each do |row|
-        #     hash = {}
-        #     cols.each{|n,t,j| hash[n] = convert_odbc_value(row[j], t)}
-        #     yield hash
-        #   end
-        # end
-        # self
 
         execute(sql) do |bq_result|
           self.columns = bq_result.fields.map { |field| field.name.to_sym }
@@ -221,48 +180,14 @@ module Sequel
           end
         end
 
-        # execute(sql).each do |row|
-        #   yield row
-        # end
         self
       end
-
-      # def columns
-      #   fields.map { |field| field.name.to_sym }
-      # end
       
       private
-
-      # def convert_odbc_value(v, t)
-      #   # When fetching a result set, the Ruby ODBC driver converts all ODBC
-      #   # SQL types to an equivalent Ruby type; with the exception of
-      #   # SQL_TYPE_DATE, SQL_TYPE_TIME and SQL_TYPE_TIMESTAMP.
-      #   #
-      #   # The conversions below are consistent with the mappings in
-      #   # ODBCColumn#mapSqlTypeToGenericType and Column#klass.
-      #   case v
-      #   when ::ODBC::TimeStamp
-      #     db.to_application_timestamp([v.year, v.month, v.day, v.hour, v.minute, v.second, v.fraction])
-      #   when ::ODBC::Time
-      #     Sequel::SQLTime.create(v.hour, v.minute, v.second)
-      #   when ::ODBC::Date
-      #     Date.new(v.year, v.month, v.day)
-      #   else
-      #     if t == ::ODBC::SQL_BIT
-      #       v == 1
-      #     else
-      #       v
-      #     end
-      #   end
-      # end
 
       def literal_time(v)
         "'#{v.iso8601}'"
       end
-
-      # def literal_date(v)
-      #   v.strftime("{d '%Y-%m-%d'}")
-      # end
       
       def literal_false
         'false'
