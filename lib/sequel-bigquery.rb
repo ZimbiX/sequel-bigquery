@@ -50,7 +50,7 @@ module Sequel
         puts '#execute'
         log_query(sql)
 
-        require 'pry'; binding.pry if sql =~ /CREATE TABLE IF NOT EXISTS/i
+        # require 'pry'; binding.pry if sql =~ /CREATE TABLE IF NOT EXISTS/i
 
         sql = sql.gsub(/\sdefault \S+/i) do
           warn_default_removal(sql)
