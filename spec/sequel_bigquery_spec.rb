@@ -21,9 +21,9 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   describe 'migrating' do
-    before { delete_schema_info_table }
+    before { drop_tables }
 
-    def delete_schema_info_table
+    def drop_tables
       %w[schema_info people].each do |table_name|
         table(table_name)&.delete
       end
