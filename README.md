@@ -37,6 +37,7 @@ Features:
   + _Boolean_ (`TrueClass`/`FalseClass`)
   + DateTime (note that BigQuery does not persist timezone)
   + Date
+  + Float
   + BigDecimal
 
 ## Installation

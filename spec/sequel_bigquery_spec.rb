@@ -56,6 +56,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
         last_skied_at: last_skied_at,
         date_of_birth: Date.new(1994, 1, 31),
         height_m: 1.870672173,
+        distance_from_sun_million_km: 149.22,
       }
     end
     let(:last_skied_at) { Time.new(2016, 8, 21, 16, 0, 0, '+08:00') }

@@ -106,6 +106,10 @@ module Sequel
         end
       end
 
+      def type_literal_generic_float(_column)
+        :float64
+      end
+
       private
 
       def adapter_initialize
