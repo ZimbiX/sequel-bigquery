@@ -116,7 +116,6 @@ module Sequel
         puts '#adapter_initialize'
         extension(:identifier_mangling)
         self.identifier_input_method = nil
-        self.quote_identifiers = false
       end
 
       def connection_execute_method
@@ -196,6 +195,11 @@ module Sequel
 
       def literal_true
         'true'
+      end
+
+      # Like MySQL, BigQuery uses the nonstandard ` (backtick) for quoting identifiers.
+      def quoted_identifier_append(sql, c)
+        sql << '`%s`' % c
       end
     end
   end
