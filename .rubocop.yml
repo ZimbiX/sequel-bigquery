@@ -62,12 +62,7 @@ Lint/UnmodifiedReduceAccumulator:
 Metrics/MethodLength:
   Max: 15
 Naming/MethodParameterName:
-  AllowedNames:
-    - 'db'
-    - 'id'
-    - 'by'
-    - 'as'
-    - 'to'
+  Enabled: false
 Naming/FileName:
   Exclude:
     - lib/sequel-bigquery.rb

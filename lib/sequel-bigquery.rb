@@ -39,7 +39,7 @@ module Sequel
           .tap { puts '#connect end' }
       end
 
-      def disconnect_connection(_c) # rubocop:disable Naming/MethodParameterName
+      def disconnect_connection(_c)
         puts '#disconnect_connection'
         # c.disconnect
       end
@@ -136,7 +136,7 @@ module Sequel
         end
       end
 
-      def disconnect_error?(e, opts) # rubocop:disable Lint/UselessMethodDefinition, Naming/MethodParameterName
+      def disconnect_error?(e, opts) # rubocop:disable Lint/UselessMethodDefinition
         # super || (e.is_a?(::ODBC::Error) && /\A08S01/.match(e.message))
         super
       end
@@ -179,7 +179,7 @@ module Sequel
 
       private
 
-      def literal_time(v) # rubocop:disable Naming/MethodParameterName
+      def literal_time(v)
         "'#{v.iso8601}'"
       end
 
