@@ -44,6 +44,16 @@ module Sequel
         # c.disconnect
       end
 
+      def drop_datasets(*dataset_names_to_drop)
+        dataset_names_to_drop.each do |dataset_name_to_drop|
+          puts "Dropping dataset #{dataset_name_to_drop.inspect}"
+          dataset_to_drop = @bigquery.dataset(dataset_name_to_drop)
+          dataset_to_drop.tables.each(&:delete)
+          dataset_to_drop.delete
+        end
+      end
+      alias_method :drop_dataset, :drop_datasets
+
       def execute(sql, opts = OPTS) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
         puts '#execute'
         log_query(sql)
