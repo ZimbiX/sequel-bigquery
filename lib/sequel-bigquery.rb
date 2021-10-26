@@ -52,7 +52,7 @@ module Sequel
           dataset_to_drop.delete
         end
       end
-      alias_method :drop_dataset, :drop_datasets
+      alias drop_dataset drop_datasets
 
       def execute(sql, opts = OPTS) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
         puts '#execute'

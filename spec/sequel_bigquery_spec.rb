@@ -4,8 +4,6 @@ require 'spec_helper'
 
 Sequel.extension :migration
 
-
-
 def create_dataset(dataset_name)
   bigquery.create_dataset(dataset_name)
 rescue Google::Cloud::AlreadyExistsError
