@@ -19,8 +19,21 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   let(:dataset) { bigquery.dataset(dataset_name) }
   let(:migrations_dir) { 'spec/support/migrations/general' }
 
-  def create_dataset(dataset_name)
-    bigquery.create_dataset(dataset_name)
+  def recreate_dataset(name = dataset_name)
+    delete_dataset(name)
+    create_dataset(name)
+  end
+
+  def delete_dataset(name = dataset_name)
+    dataset_to_drop = bigquery.dataset(name)
+    return unless dataset_to_drop
+
+    dataset_to_drop.tables.each(&:delete)
+    dataset_to_drop.delete
+  end
+
+  def create_dataset(name = dataset_name)
+    bigquery.create_dataset(name)
   rescue Google::Cloud::AlreadyExistsError
     # cool
   end
@@ -29,22 +42,13 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     dataset.table(name)
   end
 
-  def drop_tables
-    %w[schema_info people].each do |table_name|
-      table(table_name)&.delete
-    end
-  rescue Google::Cloud::NotFoundError
-    # Ok
-  end
-
   it 'can connect' do
     expect(db).to be_a(Sequel::Bigquery::Database)
   end
 
   describe 'migrating' do
     before do
-      create_dataset(dataset_name)
-      drop_tables
+      recreate_dataset
     end
 
     it 'can migrate' do
@@ -58,6 +62,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
 
   describe 'reading/writing rows' do
     before do
+      delete_dataset
       Sequel::Migrator.run(db, migrations_dir)
     end
 
@@ -88,8 +93,9 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     let(:second_dataset_name) { 'another_test_dataset' }
 
     before do
+      delete_dataset
       Sequel::Migrator.run(db, migrations_dir)
-      create_dataset(second_dataset_name)
+      recreate_dataset(second_dataset_name)
     end
 
     it 'can drop a dataset' do
@@ -107,11 +113,10 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
 
   describe 'paritioning tables' do
     let(:migrations_dir) { 'spec/support/migrations/partitioning' }
-    let(:expected_sql) { 'CREATE TABLE `people` (`name` string, `date_of_birth` date) PARTITION BY (`date_of_birth`)' }
+    let(:expected_sql) { 'CREATE TABLE `partitioned_people` (`name` string, `date_of_birth` date) PARTITION BY (`date_of_birth`)' }
 
     before do
-      create_dataset(dataset_name)
-      drop_tables
+      recreate_dataset
 
       allow(Google::Cloud::Bigquery).to receive(:new).and_return(bigquery)
       allow(bigquery).to receive(:dataset).and_return(dataset)
