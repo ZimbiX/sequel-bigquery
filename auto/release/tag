@@ -17,4 +17,4 @@ git push origin master
 
 info "Tagging release..."
 git tag "$version"
-git push origin "$version"
+git push origin "$version" --no-verify
