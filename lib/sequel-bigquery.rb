@@ -173,6 +173,22 @@ module Sequel
           'Note that no result data is returned while the transaction is open.',
         )
       end
+
+      # SQL for creating a table with BigQuery specific options
+      def create_table_sql(name, generator, options)
+        "#{super}#{create_table_suffix_sql(name, options)}"
+      end
+
+      # Handle BigQuery specific table extensions (i.e. partitioning)
+      def create_table_suffix_sql(_name, options)
+        sql = +''
+
+        if (partition_by = options[:partition_by])
+          sql << " PARTITION BY #{literal(Array(partition_by))}"
+        end
+
+        sql
+      end
     end
 
     class Dataset < Sequel::Dataset

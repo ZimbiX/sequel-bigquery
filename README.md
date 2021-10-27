@@ -31,6 +31,7 @@ Features:
 - Updating rows, with automatic addition of `where 1 = 1` to statements (since BigQuery requires a `where` clause)
 - Querying
 - Transactions (buffered since BigQuery only supports them when you execute the whole transaction at once)
+- Table partitioning
 - Ruby types:
   + String
   + Integer
