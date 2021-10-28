@@ -5,9 +5,10 @@ set -Eeuo pipefail
 
 cd $(dirname $0)/..
 
+docker-compose build dev
+
 # Delete containers and DB volume afterwards on CI
 if [ "${CI-}" == "true" ]; then
-  docker-compose build dev
   trap '{
     echo "Stopping containers and removing volumes..."
     docker-compose down
