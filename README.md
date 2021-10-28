@@ -4,6 +4,10 @@
 
 A Sequel adapter for [Google's BigQuery](https://cloud.google.com/bigquery).
 
+This gem was created in order to manage schema migrations of a BigQuery dataset at GreenSync. At the time of writing, we couldn't find any good tools in any language to manage changes to the schema as a set of migrations.
+
+Beyond migrations, I'm unsure how useful this gem is. I haven't yet tested what the performance would be for data interactions vs. directly using the `google-cloud-bigquery` gem's native facilities. If you're inserting a bunch of data, it's probably a better idea to use an [inserter from that gem](https://googleapis.dev/ruby/google-cloud-bigquery/latest/Google/Cloud/Bigquery/Dataset.html#insert_async-instance_method) rather than going through SQL.
+
 ## Contents
 
 <!-- MarkdownTOC autolink=true -->
