@@ -28,8 +28,8 @@ info "Pushing $GEM_NAME-$version.gem to RubyGems..."
 gem push "$GEM_NAME-$version.gem"
 
 info "Creating a draft GitHub release..."
-auto/with-deploytools create-github-release -d -v "${version}" \
-  | tee >(jq -r '.html_url' > /tmp/release_html_url)
+auto/with-deploytools sh -c "create-github-release -d -v '${version}' | jq -r .html_url" \
+  | tr -d "\r" | tee /dev/stderr | tail -1 > /tmp/release_html_url
 
 info "Opening GitHub page in browser so you can create a release from the tag"
 info "Be sure to include a quick summary of what's changed since the last release..."
