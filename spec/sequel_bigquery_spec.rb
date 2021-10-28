@@ -10,6 +10,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
       adapter: :bigquery,
       project: project_name,
       database: dataset_name,
+      location: location,
       logger: Logger.new(STDOUT),
     )
   end
@@ -17,6 +18,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   let(:dataset_name) { 'sequel_bigquery_gem' }
   let(:bigquery) { Google::Cloud::Bigquery.new(project: project_name) }
   let(:dataset) { bigquery.dataset(dataset_name) }
+  let(:location) { nil }
   let(:migrations_dir) { 'spec/support/migrations/general' }
 
   def recreate_dataset(name = dataset_name)
@@ -44,6 +46,23 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
 
   it 'can connect' do
     expect(db).to be_a(Sequel::Bigquery::Database)
+  end
+
+  describe 'with a provided location' do
+    let(:location) { 'australia-southeast2' }
+    let(:dataset) { instance_double(Google::Cloud::Bigquery::Dataset) }
+    let(:bigquery_project) { instance_double(Google::Cloud::Bigquery::Project, dataset: nil) }
+
+    before do
+      allow(Google::Cloud::Bigquery).to receive(:new).and_return(bigquery_project)
+      allow(bigquery_project).to receive(:create_dataset).and_return(dataset)
+    end
+
+    it 'can be targetted to a specific datacenter location' do
+      db
+
+      expect(bigquery_project).to have_received(:create_dataset).with(anything, hash_including(location: 'australia-southeast2'))
+    end
   end
 
   describe 'migrating' do
@@ -111,7 +130,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     end
   end
 
-  describe 'paritioning tables' do
+  describe 'partitioning tables' do
     let(:migrations_dir) { 'spec/support/migrations/partitioning' }
     let(:expected_sql) { 'CREATE TABLE `partitioned_people` (`name` string, `date_of_birth` date) PARTITION BY (`date_of_birth`)' }
 

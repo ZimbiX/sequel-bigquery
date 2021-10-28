@@ -29,12 +29,13 @@ module Sequel
         config = @orig_opts.dup
         config.delete(:adapter)
         config.delete(:logger)
+        location = config.delete(:location)
         bq_dataset_name = config.delete(:dataset) || config.delete(:database)
         @bigquery = Google::Cloud::Bigquery.new(config)
         # ObjectSpace.each_object(HTTPClient).each { |c| c.debug_dev = STDOUT }
         @bigquery.dataset(bq_dataset_name) || begin
           @loggers[0].debug('BigQuery dataset %s does not exist; creating it' % bq_dataset_name)
-          @bigquery.create_dataset(bq_dataset_name)
+          @bigquery.create_dataset(bq_dataset_name, location: location)
         end
           .tap { puts '#connect end' }
       end
