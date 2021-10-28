@@ -49,6 +49,7 @@ module Sequel
         dataset_names_to_drop.each do |dataset_name_to_drop|
           puts "Dropping dataset #{dataset_name_to_drop.inspect}"
           dataset_to_drop = @bigquery.dataset(dataset_name_to_drop)
+          next unless dataset_to_drop
           dataset_to_drop.tables.each(&:delete)
           dataset_to_drop.delete
         end

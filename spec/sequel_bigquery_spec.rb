@@ -126,7 +126,8 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     it 'can drop multiple dataset' do
       db.drop_datasets(dataset_name, second_dataset_name)
 
-      expect(bigquery.datasets).not_to include(dataset_name, second_dataset_name)
+    it 'ignores non-existent datasets' do
+      expect { db.drop_dataset('some-non-existent-dataset') }.not_to raise_error
     end
   end
 
