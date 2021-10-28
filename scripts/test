@@ -2,4 +2,8 @@
 
 set -Eeuo pipefail
 
-bundle exec rspec --order rand "$@"
+cd "$(dirname "$0")/.."
+
+export PARALLEL_SPLIT_TEST_PROCESSES="${SEQUEL_BIGQUERY_PARALLEL_SPLIT_TEST_PROCESSES:-15}"
+
+bundle exec parallel_split_test spec "$@"

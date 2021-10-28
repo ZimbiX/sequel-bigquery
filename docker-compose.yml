@@ -16,6 +16,7 @@ services:
       - "${GOOGLE_APPLICATION_CREDENTIALS-~/.config/gcloud/application_default_credentials.json}:/secrets/gcloud/credentials.json:ro"
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcloud/credentials.json
+      SEQUEL_BIGQUERY_PARALLEL_SPLIT_TEST_PROCESSES: ~
 
 volumes:
   ruby-2.7.2-gem-cache: ~

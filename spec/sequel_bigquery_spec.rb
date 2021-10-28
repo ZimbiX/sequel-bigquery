@@ -9,7 +9,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     Sequel.connect(
       adapter: :bigquery,
       project: project_name,
-      database: dataset_name,
+      database: isolated_dataset_name(dataset_name),
       location: location,
       logger: Logger.new(STDOUT),
     )
@@ -17,7 +17,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   let(:project_name) { 'greensync-dex-dev' }
   let(:dataset_name) { 'sequel_bigquery_gem' }
   let(:bigquery) { Google::Cloud::Bigquery.new(project: project_name) }
-  let(:dataset) { bigquery.dataset(dataset_name) }
+  let(:dataset) { bigquery.dataset(isolated_dataset_name(dataset_name)) }
   let(:location) { nil }
   let(:migrations_dir) { 'spec/support/migrations/general' }
 
@@ -27,7 +27,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   def delete_dataset(name = dataset_name)
-    dataset_to_drop = bigquery.dataset(name)
+    dataset_to_drop = bigquery.dataset(isolated_dataset_name(name))
     return unless dataset_to_drop
 
     dataset_to_drop.tables.each(&:delete)
@@ -35,13 +35,22 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   def create_dataset(name = dataset_name)
-    bigquery.create_dataset(name)
+    bigquery.create_dataset(isolated_dataset_name(name))
   rescue Google::Cloud::AlreadyExistsError
     # cool
   end
 
   def table(name)
     dataset.table(name)
+  end
+
+  def isolated_dataset_name(name)
+    [
+      name,
+      ENV['GITHUB_USERNAME'],
+      ENV['BUILDKITE_BUILD_NUMBER'],
+      ENV['TEST_ENV_NUMBER'],
+    ].compact.join('_').tap(&method(:puts))
   end
 
   it 'can connect' do
@@ -118,13 +127,22 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     end
 
     it 'can drop a dataset' do
-      db.drop_dataset(dataset_name)
+      db.drop_dataset(isolated_dataset_name(dataset_name))
 
       expect(bigquery.datasets).not_to include(dataset_name)
     end
 
-    it 'can drop multiple dataset' do
-      db.drop_datasets(dataset_name, second_dataset_name)
+    it 'can drop multiple datasets' do # rubocop:disable RSpec/ExampleLength
+      db.drop_datasets(
+        isolated_dataset_name(dataset_name),
+        isolated_dataset_name(second_dataset_name),
+      )
+
+      expect(bigquery.datasets).not_to include(
+        isolated_dataset_name(dataset_name),
+        isolated_dataset_name(second_dataset_name),
+      )
+    end
 
     it 'ignores non-existent datasets' do
       expect { db.drop_dataset('some-non-existent-dataset') }.not_to raise_error
