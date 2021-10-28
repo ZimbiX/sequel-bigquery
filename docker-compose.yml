@@ -11,7 +11,7 @@ services:
     command: bash
     volumes:
       - .:/work
-      - ruby-2.7.2-gem-cache:/usr/local/bundle
+      - ruby-2.7.4-gem-cache:/usr/local/bundle
       - ~/.docker-rc.d/:/.docker-rc.d/:ro
       - "${GOOGLE_APPLICATION_CREDENTIALS-~/.config/gcloud/application_default_credentials.json}:/secrets/gcloud/credentials.json:ro"
     environment:
@@ -19,4 +19,4 @@ services:
       SEQUEL_BIGQUERY_PARALLEL_SPLIT_TEST_PROCESSES: ~
 
 volumes:
-  ruby-2.7.2-gem-cache: ~
+  ruby-2.7.4-gem-cache: ~
