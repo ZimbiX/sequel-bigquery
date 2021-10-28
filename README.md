@@ -40,6 +40,7 @@ Features:
   + Date
   + Float
   + BigDecimal
+- Selecting the BigQuery server location
 
 ## Installation
 
@@ -72,6 +73,7 @@ db = Sequel.connect(
   adapter: :bigquery,
   project: 'your-gcp-project',
   database: 'your_bigquery_dataset_name',
+  location: 'australia-southeast2',
   logger: Logger.new(STDOUT),
 )
 ```
