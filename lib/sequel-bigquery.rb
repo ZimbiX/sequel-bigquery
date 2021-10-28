@@ -221,7 +221,7 @@ module Sequel
 
       # Like MySQL, BigQuery uses the nonstandard ` (backtick) for quoting identifiers.
       def quoted_identifier_append(sql, c)
-        sql << '`%s`' % c
+        sql << ('`%s`' % c)
       end
 
       def input_identifier(v)
