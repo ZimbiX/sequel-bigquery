@@ -17,7 +17,6 @@ module Sequel
       set_adapter_scheme :bigquery
 
       def initialize(*args, **kawrgs)
-        puts '.new'
         @orig_opts = kawrgs.fetch(:orig_opts)
         @sql_buffer = []
         @sql_buffering = false
@@ -25,7 +24,7 @@ module Sequel
       end
 
       def connect(*_args)
-        puts '#connect'
+        logger.debug '#connect'
         config = @orig_opts.dup
         config.delete(:adapter)
         config.delete(:logger)
@@ -34,20 +33,20 @@ module Sequel
         @bigquery = Google::Cloud::Bigquery.new(config)
         # ObjectSpace.each_object(HTTPClient).each { |c| c.debug_dev = STDOUT }
         @bigquery.dataset(bq_dataset_name) || begin
-          @loggers[0].debug('BigQuery dataset %s does not exist; creating it' % bq_dataset_name)
+          logger.debug('BigQuery dataset %s does not exist; creating it' % bq_dataset_name)
           @bigquery.create_dataset(bq_dataset_name, location: location)
         end
-          .tap { puts '#connect end' }
+          .tap { logger.debug '#connect end' }
       end
 
       def disconnect_connection(_c)
-        puts '#disconnect_connection'
+        logger.debug '#disconnect_connection'
         # c.disconnect
       end
 
       def drop_datasets(*dataset_names_to_drop)
         dataset_names_to_drop.each do |dataset_name_to_drop|
-          puts "Dropping dataset #{dataset_name_to_drop.inspect}"
+          logger.debug "Dropping dataset #{dataset_name_to_drop.inspect}"
           dataset_to_drop = @bigquery.dataset(dataset_name_to_drop)
           next unless dataset_to_drop
           dataset_to_drop.tables.each(&:delete)
@@ -57,7 +56,7 @@ module Sequel
       alias drop_dataset drop_datasets
 
       def execute(sql, opts = OPTS) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-        puts '#execute'
+        logger.debug '#execute'
         log_query(sql)
 
         # require 'pry'; binding.pry if sql =~ /CREATE TABLE IF NOT EXISTS/i
@@ -156,12 +155,11 @@ module Sequel
       # Padded to horizontally align with post-execution log message which includes the execution time
       def log_query(sql)
         pad = '                                                                '
-        puts Paint[pad + sql, :cyan, :bold]
-        # @loggers[0]&.debug('            ' + sql)
+        logger.debug Paint[pad + sql, :cyan, :bold]
       end
 
       def warn(msg)
-        @loggers[0].warn(Paint[msg, '#FFA500', :bold])
+        logger.warn(Paint[msg, '#FFA500', :bold])
       end
 
       def warn_default_removal(sql)
@@ -191,11 +189,15 @@ module Sequel
 
         sql
       end
+
+      def logger
+        @loggers[0]
+      end
     end
 
     class Dataset < Sequel::Dataset
       def fetch_rows(sql, &block)
-        puts '#fetch_rows'
+        logger.debug '#fetch_rows'
 
         execute(sql) do |bq_result|
           self.columns = bq_result.fields.map { |field| field.name.to_sym }
@@ -226,6 +228,10 @@ module Sequel
 
       def input_identifier(v)
         v.to_s
+      end
+
+      def logger
+        db.loggers[0]
       end
     end
   end
