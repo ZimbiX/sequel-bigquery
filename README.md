@@ -72,6 +72,7 @@ Connect to BigQuery:
 
 ```
 require 'sequel-bigquery'
+require 'logger'
 
 db = Sequel.connect(
   adapter: :bigquery,
