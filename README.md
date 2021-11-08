@@ -84,6 +84,8 @@ db = Sequel.connect(
 
 And use Sequel like normal.
 
+Note that it is important to supply a logger that will at least output warning messages so you know when your queries are being modifed or buffered, which may be unexpected behaviour.
+
 ## Contributing
 
 Pull requests welcome! =)
