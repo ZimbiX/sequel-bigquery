@@ -4,6 +4,7 @@ require 'delegate'
 require 'time'
 
 require 'google/cloud/bigquery'
+require 'amazing_print'
 require 'paint'
 require 'sequel'
 
@@ -24,9 +25,9 @@ module Sequel
       end
 
       def connect(*_args)
-        logger.debug '#connect'
+        log_each(:debug, '#connect')
         get_or_create_bigquery_dataset
-          .tap { logger.debug '#connect end' }
+          .tap { log_each(:debug, '#connect end') }
       end
 
       def bigquery
@@ -35,13 +36,13 @@ module Sequel
       end
 
       def disconnect_connection(_c)
-        logger.debug '#disconnect_connection'
+        log_each(:debug, '#disconnect_connection')
         # c.disconnect
       end
 
       def drop_datasets(*dataset_names_to_drop)
         dataset_names_to_drop.each do |dataset_name_to_drop|
-          logger.debug "Dropping dataset #{dataset_name_to_drop.inspect}"
+          log_each(:debug, "Dropping dataset #{dataset_name_to_drop.inspect}")
           dataset_to_drop = bigquery.dataset(dataset_name_to_drop)
           next unless dataset_to_drop
           dataset_to_drop.tables.each(&:delete)
@@ -51,7 +52,7 @@ module Sequel
       alias drop_dataset drop_datasets
 
       def execute(sql, opts = OPTS) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-        logger.debug '#execute'
+        log_each(:debug, '#execute')
         log_query(sql)
 
         # require 'pry'; binding.pry if sql =~ /CREATE TABLE IF NOT EXISTS/i
@@ -82,15 +83,12 @@ module Sequel
             sql_to_execute = @sql_buffer.any? ? @sql_buffer.join("\n") : sql
             conn.query(sql_to_execute)
           end
-          require 'amazing_print'
-          ap results
+          log_each(:debug, results.awesome_inspect)
           if block_given?
             yield results
           else
             results
           end
-        # TODO
-        # rescue ::ODBC::Error, ArgumentError => e
         rescue Google::Cloud::InvalidArgumentError, ArgumentError => e
           raise_error(e)
         end # rubocop:disable Style/MultilineBlockChain
@@ -136,7 +134,7 @@ module Sequel
 
       def get_or_create_bigquery_dataset # rubocop:disable Naming/AccessorMethodName
         bigquery.dataset(bigquery_dataset_name) || begin
-          logger.debug('BigQuery dataset %s does not exist; creating it' % bigquery_dataset_name)
+          log_each(:debug, 'BigQuery dataset %s does not exist; creating it' % bigquery_dataset_name)
           bigquery.create_dataset(bigquery_dataset_name, location: bigquery_config[:location])
         end
       end
@@ -159,7 +157,7 @@ module Sequel
       end
 
       def schema_parse_table(_table_name, _opts)
-        logger.debug(Paint['schema_parse_table', :red, :bold])
+        log_each(:debug, Paint['schema_parse_table', :red, :bold])
         # require 'pry'; binding.pry
         bigquery.datasets.map do |dataset|
           [
@@ -176,12 +174,12 @@ module Sequel
 
       # Padded to horizontally align with post-execution log message which includes the execution time
       def log_query(sql)
-        pad = '                                                                '
-        logger.debug Paint[pad + sql, :cyan, :bold]
+        pad = ' ' * 12
+        log_each(:debug, Paint[pad + sql, :cyan, :bold])
       end
 
       def warn(msg)
-        logger.warn(Paint[msg, '#FFA500', :bold])
+        log_each(:warn, Paint[msg, '#FFA500', :bold])
       end
 
       def warn_default_removal(sql)
@@ -211,15 +209,11 @@ module Sequel
 
         sql
       end
-
-      def logger
-        @loggers[0]
-      end
     end
 
     class Dataset < Sequel::Dataset
       def fetch_rows(sql, &block)
-        logger.debug '#fetch_rows'
+        db.send(:log_each, :debug, '#fetch_rows')
 
         execute(sql) do |bq_result|
           self.columns = bq_result.fields.map { |field| field.name.to_sym }
@@ -250,10 +244,6 @@ module Sequel
 
       def input_identifier(v)
         v.to_s
-      end
-
-      def logger
-        db.loggers[0]
       end
     end
   end

@@ -50,7 +50,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
       ENV['GITHUB_USERNAME'],
       ENV['BUILDKITE_BUILD_NUMBER'],
       ENV['TEST_ENV_NUMBER'],
-    ].compact.join('_').tap(&method(:puts))
+    ].compact.join('_')
   end
 
   it 'can connect' do
