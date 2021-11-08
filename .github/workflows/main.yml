@@ -1,0 +1,34 @@
+name: CI
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+jobs:
+
+  check-style:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker image cache
+        uses: ZimbiX/action-docker-layer-caching@fix-error-cannot-use-import-statement-outside-a-module-release
+        continue-on-error: true
+
+      - name: RuboCop
+        run: auto/check-style
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker image cache
+        uses: ZimbiX/action-docker-layer-caching@fix-error-cannot-use-import-statement-outside-a-module-release
+        continue-on-error: true
+
+      - name: RSpec
+        run: auto/test
