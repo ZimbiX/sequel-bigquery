@@ -66,6 +66,7 @@ Naming/MethodParameterName:
 Naming/FileName:
   Exclude:
     - lib/sequel-bigquery.rb
+    - spec/sequel-bigquery_spec.rb
 Naming/VariableNumber:
   Enabled: false
 Performance/AncestorsInclude:

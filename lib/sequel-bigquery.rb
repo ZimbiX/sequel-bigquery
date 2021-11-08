@@ -134,7 +134,7 @@ module Sequel
         end
       end
 
-      def get_or_create_bigquery_dataset
+      def get_or_create_bigquery_dataset # rubocop:disable Naming/AccessorMethodName
         bigquery.dataset(bigquery_dataset_name) || begin
           logger.debug('BigQuery dataset %s does not exist; creating it' % bigquery_dataset_name)
           bigquery.create_dataset(bigquery_dataset_name, location: bigquery_config[:location])
