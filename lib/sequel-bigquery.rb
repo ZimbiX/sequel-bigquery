@@ -16,8 +16,8 @@ module Sequel
     class Database < Sequel::Database # rubocop:disable Metrics/ClassLength
       set_adapter_scheme :bigquery
 
-      def initialize(*args, **kawrgs)
-        @orig_opts = kawrgs.fetch(:orig_opts)
+      def initialize(*args, **kwargs)
+        @bigquery_config = kwargs.fetch(:orig_opts)
         @sql_buffer = []
         @sql_buffering = false
         super
@@ -25,18 +25,13 @@ module Sequel
 
       def connect(*_args)
         logger.debug '#connect'
-        config = @orig_opts.dup
-        config.delete(:adapter)
-        config.delete(:logger)
-        location = config.delete(:location)
-        bq_dataset_name = config.delete(:dataset) || config.delete(:database)
-        @bigquery = Google::Cloud::Bigquery.new(config)
-        # ObjectSpace.each_object(HTTPClient).each { |c| c.debug_dev = STDOUT }
-        @bigquery.dataset(bq_dataset_name) || begin
-          logger.debug('BigQuery dataset %s does not exist; creating it' % bq_dataset_name)
-          @bigquery.create_dataset(bq_dataset_name, location: location)
-        end
+        get_or_create_bigquery_dataset
           .tap { logger.debug '#connect end' }
+      end
+
+      def bigquery
+        # ObjectSpace.each_object(HTTPClient).each { |c| c.debug_dev = STDOUT }
+        @bigquery ||= Google::Cloud::Bigquery.new(google_cloud_bigquery_gem_config)
       end
 
       def disconnect_connection(_c)
@@ -47,7 +42,7 @@ module Sequel
       def drop_datasets(*dataset_names_to_drop)
         dataset_names_to_drop.each do |dataset_name_to_drop|
           logger.debug "Dropping dataset #{dataset_name_to_drop.inspect}"
-          dataset_to_drop = @bigquery.dataset(dataset_name_to_drop)
+          dataset_to_drop = bigquery.dataset(dataset_name_to_drop)
           next unless dataset_to_drop
           dataset_to_drop.tables.each(&:delete)
           dataset_to_drop.delete
@@ -123,6 +118,33 @@ module Sequel
 
       private
 
+      attr_reader :bigquery_config
+
+      def google_cloud_bigquery_gem_config
+        bigquery_config.dup.tap do |config|
+          %i[
+            adapter
+            database
+            dataset
+            location
+            logger
+          ].each do |option|
+            config.delete(option)
+          end
+        end
+      end
+
+      def get_or_create_bigquery_dataset
+        bigquery.dataset(bigquery_dataset_name) || begin
+          logger.debug('BigQuery dataset %s does not exist; creating it' % bigquery_dataset_name)
+          bigquery.create_dataset(bigquery_dataset_name, location: bigquery_config[:location])
+        end
+      end
+
+      def bigquery_dataset_name
+        bigquery_config[:dataset] || bigquery_config[:database] || (raise ArgumentError, 'BigQuery dataset must be specified')
+      end
+
       def connection_execute_method
         :query
       end
@@ -139,7 +161,7 @@ module Sequel
       def schema_parse_table(_table_name, _opts)
         logger.debug(Paint['schema_parse_table', :red, :bold])
         # require 'pry'; binding.pry
-        @bigquery.datasets.map do |dataset|
+        bigquery.datasets.map do |dataset|
           [
             dataset.dataset_id,
             {},
