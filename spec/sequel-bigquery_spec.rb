@@ -27,6 +27,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   def delete_dataset(name = dataset_name)
+    puts "Deleting dataset '#{isolated_dataset_name(name)}'..."
     dataset_to_drop = bigquery.dataset(isolated_dataset_name(name))
     return unless dataset_to_drop
 
@@ -35,6 +36,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   def create_dataset(name = dataset_name)
+    puts "Creating dataset '#{isolated_dataset_name(name)}'..."
     bigquery.create_dataset(isolated_dataset_name(name))
   rescue Google::Cloud::AlreadyExistsError
     # cool
