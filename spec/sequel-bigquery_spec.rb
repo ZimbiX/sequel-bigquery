@@ -27,6 +27,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   def delete_dataset(name = dataset_name)
+    puts "Deleting dataset '#{isolated_dataset_name(name)}'..."
     dataset_to_drop = bigquery.dataset(isolated_dataset_name(name))
     return unless dataset_to_drop
 
@@ -35,6 +36,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
   end
 
   def create_dataset(name = dataset_name)
+    puts "Creating dataset '#{isolated_dataset_name(name)}'..."
     bigquery.create_dataset(isolated_dataset_name(name))
   rescue Google::Cloud::AlreadyExistsError
     # cool
@@ -198,6 +200,53 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
 
     it 'combines queries into one alter table statement' do
       expect(dataset).to have_received(:query).with(expected_sql)
+    end
+  end
+
+  describe 'alter table rate limits' do
+    let(:table_name) { "alter_table_rate_limits_test_#{run_id}" }
+    let(:run_id) { (Time.now.to_f * 1000).to_i }
+    # This set of ALTER TABLE queries are joined in order to hopefully execute everything quickly and trigger the rate-limit. Not all of the columns will get added
+    let(:create_table_and_trigger_rate_limit_queries_joined) do
+      [
+        "CREATE TABLE `#{table_name}` (`col_initial` string)",
+        (0..30).map do |i|
+          "ALTER TABLE `#{table_name}` ADD COLUMN `col_#{i}` string"
+        end,
+        'SELECT 1',
+      ].join('; ')
+    end
+    let(:query_to_add_column_once_rate_limited) do
+      "ALTER TABLE `#{table_name}` ADD COLUMN `col_added_once_rate_limited` string"
+    end
+
+    before do
+      recreate_dataset
+
+      allow(Google::Cloud::Bigquery).to receive(:new).and_return(bigquery)
+      allow(bigquery).to receive(:dataset).and_return(dataset)
+    end
+
+    def directly_create_table_and_trigger_rate_limit
+      dataset.query(create_table_and_trigger_rate_limit_queries_joined)
+    end
+
+    context "when executing more schema update queries than BigQuery's rate-limit" do
+      # The resulting exception could be either of these:
+
+      # Google::Cloud::PermissionDeniedError:
+      #   Exceeded rate limits: too many table update operations for this table. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas
+
+      # Sequel::DatabaseError:
+      #   Google::Cloud::InvalidArgumentError: invalidQuery: Exceeded rate limits: too many table update operations for this table. For more information, see https://cloud.google.com/bigquery/troubleshooting-errors at [1:285]
+
+      it 'successfully executes, retrying if necessary' do
+        expect do
+          directly_create_table_and_trigger_rate_limit
+        end.to raise_error(Google::Cloud::Error, /too many table update operations for this table/)
+        expect { db.execute(query_to_add_column_once_rate_limited) }.not_to raise_error
+        expect(db[table_name.to_sym].columns).to include(:col_added_once_rate_limited)
+      end
     end
   end
 end
