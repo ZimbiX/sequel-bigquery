@@ -78,9 +78,10 @@ module Sequel
           warn("Warning: Will now execute entire buffered transaction:\n" + @sql_buffer.join("\n"))
         end
 
+        sql_to_execute = @sql_buffer.any? ? @sql_buffer.join("\n") : sql
+
         synchronize(opts[:server]) do |conn|
           results = log_connection_yield(sql, conn) do
-            sql_to_execute = @sql_buffer.any? ? @sql_buffer.join("\n") : sql
             conn.query(sql_to_execute)
           end
           log_each(:debug, results.awesome_inspect)
@@ -89,7 +90,19 @@ module Sequel
           else
             results
           end
-        rescue Google::Cloud::InvalidArgumentError, ArgumentError => e
+        rescue Google::Cloud::InvalidArgumentError, Google::Cloud::PermissionDeniedError => e
+          if e.message.include?('too many table update operations for this table')
+            warn('Triggered rate limit of table update operations for this table. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas')
+            if retryable_query?(sql_to_execute)
+              warn('Detected retryable query - re-running query after a 1 second sleep')
+              sleep 1
+              retry
+            else
+              log_each(:error, "Query not detected as retryable; can't automatically recover from being rate-limited")
+            end
+          end
+          raise_error(e)
+        rescue ArgumentError => e
           raise_error(e)
         end # rubocop:disable Style/MultilineBlockChain
           .tap do
@@ -212,6 +225,18 @@ module Sequel
 
       def supports_combining_alter_table_ops?
         true
+      end
+
+      def retryable_query?(sql)
+        single_statement_query?(sql) && alter_table_query?(sql)
+      end
+
+      def single_statement_query?(sql)
+        !sql.rstrip.chomp(';').include?(';')
+      end
+
+      def alter_table_query?(sql)
+        sql.match?(/\Aalter table /i)
       end
     end
 
