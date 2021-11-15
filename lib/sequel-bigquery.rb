@@ -209,6 +209,13 @@ module Sequel
 
         sql
       end
+
+      # Batch the alter table queries and make sure something is returned to avoid an error related to the return value
+      def apply_alter_table(name, ops)
+        sqls = alter_table_sql_list(name, ops)
+        sqls_joined = (sqls + ['select 1']).join(";\n")
+        execute_ddl(sqls_joined)
+      end
     end
 
     class Dataset < Sequel::Dataset
