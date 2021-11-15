@@ -167,4 +167,37 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
       expect(dataset).to have_received(:query).with(expected_sql)
     end
   end
+
+  describe 'alter table migration' do
+    let(:migrations_dir) { 'spec/support/migrations/alter_table' }
+    let(:expected_sql) do
+      'ALTER TABLE `alter_people` '\
+        'ADD COLUMN `col1` string, '\
+        'ADD COLUMN `col2` string, '\
+        'ADD COLUMN `col3` string, '\
+        'ADD COLUMN `col4` string, '\
+        'ADD COLUMN `col5` string, '\
+        'ADD COLUMN `col6` string, '\
+        'ADD COLUMN `col7` string, '\
+        'ADD COLUMN `col8` string, '\
+        'ADD COLUMN `col9` string, '\
+        'ADD COLUMN `col10` string, '\
+        'ADD COLUMN `col11` string, '\
+        'ADD COLUMN `col12` string'
+    end
+
+    before do
+      recreate_dataset
+
+      allow(Google::Cloud::Bigquery).to receive(:new).and_return(bigquery)
+      allow(bigquery).to receive(:dataset).and_return(dataset)
+      allow(dataset).to receive(:query).and_call_original
+
+      Sequel::Migrator.run(db, migrations_dir)
+    end
+
+    it 'combines queries into one alter table statement' do
+      expect(dataset).to have_received(:query).with(expected_sql)
+    end
+  end
 end

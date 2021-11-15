@@ -17,7 +17,9 @@ Beyond migrations, I'm unsure how useful this gem is. I haven't yet tested what 
   - [Creating tables with column defaults](#creating-tables-with-column-defaults)
   - [Transactions](#transactions)
   - [Update statements without `WHERE`](#update-statements-without-where)
+  - [Combining statements](#combining-statements)
   - [Alter table](#alter-table)
+  - [Column recreation](#column-recreation)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
@@ -65,9 +67,19 @@ BigQuery doesn't support transactions where the statements are executed individu
 
 BigQuery requires all `UPDATE` statement to have a `WHERE` clause. As a workaround, statements which lack one have `where 1 = 1` appended automatically (crudely).
 
+### Combining statements
+
+When combining multiple statements into one query (with `;`), and the final statement is not a `SELECT`, the `google-cloud-bigquery` gem has a [bug](https://github.com/googleapis/google-cloud-ruby/issues/9617) which causes an exception. Note that all the statements have been executed when this happens. A workaround is to append `; SELECT 1`.
+
 ### Alter table
 
-We've found that the `google-cloud-bigquery` gem seems to have a bug where an internal lack of result value results in a `NoMethodError` on nil for `fields` within `from_gapi_json`. [See issue #6](https://github.com/ZimbiX/sequel-bigquery/issues/6#issuecomment-968523731). As a workaround, all generated statements within `alter_table` are joined together with `;` and executed only at the end of the block. A `select 1` is also appended to try to ensure we have a result to avoid the aforementioned exception. A bonus of batching the queries is that the latency should be somewhat reduced.
+BigQuery [rate-limits alter table statements](https://cloud.google.com/bigquery/quotas#dataset_limits) to 10 per second. This is mitigated somewhat by Sequel combining `ALTER TABLE` statements whenever possible, and BigQuery having extremely high latency (\~2 seconds per query); but you may still run into this limitation.
+
+We've also noticed a bug with `google-cloud-bigquery` where an `ALTER TABLE` statement resulted in a `NoMethodError` on nil for `fields` within `from_gapi_json`. We're not yet sure what caused this.
+
+### Column recreation
+
+Be careful when deleting a column which you might want to re-add. BigQuery reserves the name of a deleted column for up to the time travel duration - which is [*seven days*](https://cloud.google.com/bigquery/docs/time-travel). Re-creating the entire dataset is a painful workaround.
 
 ## Installation
 
