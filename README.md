@@ -13,6 +13,11 @@ Beyond migrations, I'm unsure how useful this gem is. I haven't yet tested what 
 <!-- MarkdownTOC autolink=true -->
 
 - [Intro](#intro)
+- [Quirks](#quirks)
+  - [Creating tables with column defaults](#creating-tables-with-column-defaults)
+  - [Transactions](#transactions)
+  - [Update statements without `WHERE`](#update-statements-without-where)
+  - [Alter table](#alter-table)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
@@ -29,12 +34,12 @@ Beyond migrations, I'm unsure how useful this gem is. I haven't yet tested what 
 Features:
 
 - Connecting
-- Migrating
-- Table creation, with automatic removal of defaults from statements (since BigQuery doesn't support it)
+- Migrating (see quirks)
+- Table creation (see quirks)
 - Inserting rows
-- Updating rows, with automatic addition of `where 1 = 1` to statements (since BigQuery requires a `where` clause)
+- Updating rows (see quirks)
 - Querying
-- Transactions (buffered since BigQuery only supports them when you execute the whole transaction at once)
+- Transactions (see quirks)
 - Table partitioning
 - Ruby types:
   + String
@@ -45,6 +50,24 @@ Features:
   + Float
   + BigDecimal
 - Selecting the BigQuery server location
+
+## Quirks
+
+### Creating tables with column defaults
+
+BigQuery doesn't support defaults on columns. As a workaround, all defaults are automatically removed from statements (crudely).
+
+### Transactions
+
+BigQuery doesn't support transactions where the statements are executed individually. It does support them if entire transaction SQL is sent all at once though. As a workaround, buffering of statements within a transaction has been implemented. However, the impact of this is that no results can be returned within a transaction.
+
+### Update statements without `WHERE`
+
+BigQuery requires all `UPDATE` statement to have a `WHERE` clause. As a workaround, statements which lack one have `where 1 = 1` appended automatically (crudely).
+
+### Alter table
+
+We've found that the `google-cloud-bigquery` gem seems to have a bug where an internal lack of result value results in a `NoMethodError` on nil for `fields` within `from_gapi_json`. [See issue #6](https://github.com/ZimbiX/sequel-bigquery/issues/6#issuecomment-968523731). As a workaround, all generated statements within `alter_table` are joined together with `;` and executed only at the end of the block. A `select 1` is also appended to try to ensure we have a result to avoid the aforementioned exception. A bonus of batching the queries is that the latency should be somewhat reduced.
 
 ## Installation
 
