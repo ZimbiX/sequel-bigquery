@@ -22,6 +22,7 @@ Beyond migrations, I'm unsure how useful this gem is. I haven't yet tested what 
   - [Column recreation](#column-recreation)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Migrating](#migrating)
 - [Contributing](#contributing)
 - [Development](#development)
   - [Pre-push hook](#pre-push-hook)
@@ -121,6 +122,18 @@ db = Sequel.connect(
 And use Sequel like normal.
 
 Note that it is important to supply a logger that will at least output warning messages so you know when your queries are being modifed or buffered, which may be unexpected behaviour.
+
+### Migrating
+
+```ruby
+Sequel.extension(:migration)
+
+Sequel::Migrator.run(db, 'path/to/my/migrations_dir')
+```
+
+[Here is an example migration file](spec/support/migrations/general/001_create_people_table.rb).
+
+For more details, see [Sequel's migration documentation](https://github.com/jeremyevans/sequel/blob/master/doc/migration.rdoc).
 
 ## Contributing
 
