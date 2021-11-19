@@ -106,7 +106,7 @@ gem install sequel-bigquery
 
 Connect to BigQuery:
 
-```
+```ruby
 require 'sequel-bigquery'
 require 'logger'
 
