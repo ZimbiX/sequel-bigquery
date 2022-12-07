@@ -1,4 +1,4 @@
-FROM ruby:2.7.4-slim-buster@sha256:afc5840d7214ce2f39f2ab18a32115a5b88b282394f286c00131f2799c49f76b AS ruby-base
+FROM ruby:3.1.3-slim-bullseye@sha256:a6f940b1fca8a057561ac86f431539df2e77b954370fa17348f5a5ec3cba1cad AS ruby-base
 
 ENV RUBY_BUNDLER_VERSION '2.2.30'
 ENV BUNDLE_PATH /usr/local/bundle
