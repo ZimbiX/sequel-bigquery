@@ -166,7 +166,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     end
 
     it 'supports partitioning arguments' do
-      expect(dataset).to have_received(:query).with(expected_sql)
+      expect(dataset).to have_received(:query).with(expected_sql, session_id: anything)
     end
   end
 
@@ -199,7 +199,7 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
     end
 
     it 'combines queries into one alter table statement' do
-      expect(dataset).to have_received(:query).with(expected_sql)
+      expect(dataset).to have_received(:query).with(expected_sql, session_id: anything)
     end
   end
 
@@ -247,6 +247,47 @@ RSpec.describe Sequel::Bigquery do # rubocop:disable RSpec/FilePath
         expect { db.execute(query_to_add_column_once_rate_limited) }.not_to raise_error
         expect(db[table_name.to_sym].columns).to include(:col_added_once_rate_limited)
       end
+    end
+  end
+
+  describe 'using a standard transaction across multiple queries' do
+    before do
+      recreate_dataset
+      db.execute('create table books (name string)')
+    end
+
+    it 'can commit' do
+      db.transaction do
+        db[:books].insert(name: 'The Name of the Wind')
+      end
+      expect(db[:books].all).to eq([{ name: 'The Name of the Wind' }])
+    end
+
+    it 'can rollback' do
+      db.transaction do
+        db[:books].insert(name: 'The Name of the Wind')
+        raise Sequel::Rollback
+      end
+      expect(db[:books].all).to eq([])
+    end
+  end
+
+  describe 'using Sequel::Model' do
+    before do
+      recreate_dataset
+      db.execute('create table books (name string)')
+    end
+
+    let(:book_model_class) { Sequel::Model(db[:books]) }
+    let(:book) { book_model_class.new(name: 'The Name of the Wind') }
+
+    it 'can define and instantiate a Sequel model' do
+      expect(book.name).to eq('The Name of the Wind')
+    end
+
+    xit 'can save and load a Sequel model' do
+      book.save
+      expect(book_model_class.all).to eq([book])
     end
   end
 end
