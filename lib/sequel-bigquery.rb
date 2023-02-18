@@ -17,8 +17,8 @@ module Sequel
     class Database < Sequel::Database # rubocop:disable Metrics/ClassLength
       set_adapter_scheme :bigquery
 
-      def initialize(*args, **kwargs)
-        @bigquery_config = kwargs.fetch(:orig_opts)
+      def initialize(opts)
+        @bigquery_config = opts.fetch(:orig_opts)
         @sql_buffer = []
         @sql_buffering = false
         super
@@ -32,7 +32,7 @@ module Sequel
 
       def bigquery
         # ObjectSpace.each_object(HTTPClient).each { |c| c.debug_dev = STDOUT }
-        @bigquery ||= Google::Cloud::Bigquery.new(google_cloud_bigquery_gem_config)
+        @bigquery ||= Google::Cloud::Bigquery.new(**google_cloud_bigquery_gem_config)
       end
 
       def disconnect_connection(_c)

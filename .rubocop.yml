@@ -4,7 +4,7 @@ require:
 # inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.6
+  TargetRubyVersion: 3.0.0
   CacheRootDirectory: .cache
   NewCops: enable
 Layout/ArgumentAlignment:

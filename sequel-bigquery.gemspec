@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "A Sequel adapter for Google's BigQuery"
   spec.homepage      = 'https://github.com/ZimbiX/sequel-bigquery'
-  spec.required_ruby_version = Gem::Requirement.new('>= 2.6.0')
+  spec.required_ruby_version = Gem::Requirement.new('>= 3.0.0')
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
@@ -32,5 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'amazing_print', '~> 1.3'
   spec.add_dependency 'google-cloud-bigquery', '~> 1.35'
   spec.add_dependency 'paint', '~> 2.2'
-  spec.add_dependency 'sequel', '~> 5.48'
+  spec.add_dependency 'sequel', '~> 5.63'
 end
